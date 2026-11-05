@@ -1,0 +1,536 @@
+
+/* Perfect Tours - Visual Trip Editor v1 */
+(() => {
+  'use strict';
+
+  const form = document.getElementById('tripForm');
+  const raw = document.getElementById('itinerary');
+  if (!form || !raw) return;
+
+  const esc = s => String(s ?? '').replace(
+    /[&<>"']/g,
+    c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c])
+  );
+
+  const editor = document.createElement('section');
+  editor.id = 'pt-builder';
+  editor.className = 'full';
+
+  const rawLabel = raw.closest('label');
+  rawLabel.before(editor);
+  rawLabel.style.display = 'none';
+
+  const css = document.createElement('style');
+  css.textContent = `
+    #pt-builder {
+      background:#f8f6f1;
+      border:1px solid #e6dccb;
+      border-radius:17px;
+      padding:14px;
+    }
+    #pt-builder * {box-sizing:border-box}
+    #pt-builder h3 {
+      margin:0 0 5px;
+      color:#193d51;
+    }
+    #pt-builder p {
+      margin:5px 0 12px;
+      color:#666;
+      font-size:13px;
+    }
+    #pt-builder .day {
+      background:white;
+      border:1px solid #e4ded4;
+      border-radius:14px;
+      padding:12px;
+      margin:12px 0;
+    }
+    #pt-builder .day-top {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    #pt-builder .day-top label {
+      flex:1;
+      min-width:150px;
+    }
+    #pt-builder .activity {
+      border:1px solid #e3e9ec;
+      border-radius:12px;
+      padding:10px;
+      margin:9px 0;
+      background:#fcfcfd;
+    }
+    #pt-builder .fields {
+      display:grid;
+      grid-template-columns:110px minmax(0,1fr);
+      gap:9px;
+    }
+    #pt-builder .wide {
+      grid-column:1/-1;
+    }
+    #pt-builder label {
+      font-size:12px;
+      display:block;
+      color:#344e59;
+      font-weight:700;
+    }
+    #pt-builder input,
+    #pt-builder textarea {
+      display:block;
+      width:100%;
+      margin-top:4px;
+      padding:9px;
+      border:1px solid #d7dce0;
+      border-radius:9px;
+      font:inherit;
+      min-width:0;
+    }
+    #pt-builder textarea {
+      resize:vertical;
+      min-height:65px;
+    }
+    #pt-builder .options {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin:10px 0;
+    }
+    #pt-builder .options label {
+      display:flex;
+      align-items:center;
+      gap:7px;
+    }
+    #pt-builder input[type=checkbox] {
+      width:auto;
+      margin:0;
+    }
+    #pt-builder .btnrow {
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      margin-top:9px;
+    }
+    #pt-builder button {
+      border:1px solid #d3c5a9;
+      border-radius:10px;
+      padding:9px 12px;
+      background:#fff;
+      color:#3e392f;
+      font-weight:700;
+      cursor:pointer;
+    }
+    #pt-builder button.primary {
+      background:#174862;
+      color:white;
+      border-color:#174862;
+    }
+    #pt-builder button.danger {
+      color:#9c4141;
+      border-color:#f0d4d4;
+    }
+    #pt-builder details {
+      margin-top:13px;
+    }
+    #pt-builder summary {
+      cursor:pointer;
+      font-weight:700;
+      color:#174862;
+    }
+    #pt-builder .legacy {
+      display:block!important;
+      margin:10px 0 0;
+    }
+    #pt-builder .legacy textarea {
+      min-height:140px;
+    }
+    @media(max-width:600px) {
+      #pt-builder .fields {
+        grid-template-columns:1fr;
+      }
+    }
+  `;
+  document.head.append(css);
+
+  let days = [];
+  let rawMode = false;
+  let nextId = 1;
+
+  function parse() {
+    const rows = raw.value
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    // Preserve legacy free-text itineraries.
+    if (rows.some(line => line.split('|').length < 4)) {
+      days = [];
+      rawMode = true;
+      return;
+    }
+
+    const found = [];
+    let last = null;
+
+    for (const line of rows) {
+      const c = line.split('|').map(s => s.trim());
+      const name = c[0] || 'יום ללא שם';
+
+      if (!last || last.name !== name) {
+        last = {
+          id: nextId++,
+          name,
+          items: []
+        };
+        found.push(last);
+      }
+
+      last.items.push({
+        id: nextId++,
+        time: c[1] || '',
+        title: c[2] || '',
+        description: c[3] || '',
+        ticket: /^(כרטיס|כן|נרכש|true|yes|1)$/i
+          .test(c[4] || ''),
+        image: c[5] || '',
+        map: c[6] || ''
+      });
+    }
+
+    days = found;
+  }
+
+  function serialize() {
+    return days.flatMap(d =>
+      d.items.map(a => [
+        d.name,
+        a.time,
+        a.title,
+        a.description,
+        a.ticket ? 'כרטיס' : '',
+        a.image,
+        a.map
+      ].join(' | '))
+    ).join('\n');
+  }
+
+  function sync() {
+    if (!rawMode) raw.value = serialize();
+  }
+
+  function validate() {
+    for (const d of days) {
+      for (const a of d.items) {
+        if (!a.title.trim()) {
+          return 'יש פעילות ללא שם. יש למלא שם פעילות.';
+        }
+
+        if ([
+          d.name,
+          a.time,
+          a.title,
+          a.description,
+          a.image,
+          a.map
+        ].some(x => /[|\r\n]/.test(x))) {
+          return 'אין להשתמש בסימן | או בירידת שורה בתוך שדה.';
+        }
+      }
+    }
+
+    return '';
+  }
+
+  function field(label, key, value, dayId, itemId,
+                 wide = false, textarea = false) {
+
+    const attr = `data-day="${dayId}"
+      data-item="${itemId}"
+      data-field="${key}"`;
+
+    return `<label class="${wide ? 'wide' : ''}">
+      ${label}
+      ${textarea
+        ? `<textarea ${attr}>${esc(value)}</textarea>`
+        : `<input ${attr}
+            value="${esc(value)}"
+            autocomplete="off">`
+      }
+    </label>`;
+  }
+
+  function render() {
+    editor.innerHTML = `
+      <h3>עורך מסלול לפי ימים</h3>
+      <p>בונים את המסלול יום אחר יום.
+      הפרטים המלאים יופיעו ללקוח בלחיצה
+      על כרטיס האטרקציה.</p>
+
+      ${rawMode ? `
+        <p style="color:#985b3c">
+          זוהה מסלול ישן בטקסט חופשי.
+          המידע נשמר במצב טקסט כדי למנוע
+          אובדן פרטים.
+        </p>
+      ` : ''}
+
+      <div id="pt-days">
+        ${days.map(d => `
+          <section class="day">
+            <div class="day-top">
+              <label>שם היום
+                <input data-dayname="${d.id}"
+                  value="${esc(d.name)}">
+              </label>
+
+              <button type="button"
+                data-action="remove-day"
+                data-day="${d.id}"
+                class="danger">
+                מחק יום
+              </button>
+            </div>
+
+            ${d.items.map(a => `
+              <article class="activity">
+
+                <div class="fields">
+                  ${field('שעה', 'time',
+                    a.time, d.id, a.id)}
+
+                  ${field('שם האטרקציה', 'title',
+                    a.title, d.id, a.id)}
+
+                  ${field('תיאור הפעילות',
+                    'description', a.description,
+                    d.id, a.id, true, true)}
+
+                  ${field('קישור לתמונה',
+                    'image', a.image,
+                    d.id, a.id, true)}
+
+                  ${field('קישור לניווט',
+                    'map', a.map,
+                    d.id, a.id, true)}
+                </div>
+
+                <div class="options">
+                  <label>
+                    <input type="checkbox"
+                      data-day="${d.id}"
+                      data-item="${a.id}"
+                      data-field="ticket"
+                      ${a.ticket ? 'checked' : ''}>
+                    🎟️ נרכש כרטיס מראש
+                  </label>
+                </div>
+
+                <div class="btnrow">
+                  <button type="button"
+                    data-action="up"
+                    data-day="${d.id}"
+                    data-item="${a.id}">
+                    ↑ למעלה
+                  </button>
+
+                  <button type="button"
+                    data-action="down"
+                    data-day="${d.id}"
+                    data-item="${a.id}">
+                    ↓ למטה
+                  </button>
+
+                  <button type="button"
+                    data-action="remove"
+                    data-day="${d.id}"
+                    data-item="${a.id}"
+                    class="danger">
+                    מחק פעילות
+                  </button>
+                </div>
+
+              </article>
+            `).join('')}
+
+            <div class="btnrow">
+              <button type="button"
+                class="primary"
+                data-action="add-item"
+                data-day="${d.id}">
+                + הוסף אטרקציה ליום
+              </button>
+            </div>
+          </section>
+        `).join('')}
+      </div>
+
+      <div class="btnrow">
+        <button type="button"
+          class="primary"
+          data-action="add-day">
+          + הוסף יום חדש
+        </button>
+      </div>
+
+      <details id="pt-advanced"
+        ${rawMode ? 'open' : ''}>
+        <summary>עריכת טקסט ישנה</summary>
+        <p>לצורך תאימות עם מסלולים קיימים.</p>
+        <div class="legacy" id="pt-legacy"></div>
+      </details>
+    `;
+
+    editor.querySelector('#pt-legacy').append(rawLabel);
+    rawLabel.style.display = 'block';
+
+    editor.querySelector('#pt-advanced')
+      .addEventListener('toggle', e => {
+        rawMode = e.target.open;
+
+        if (!rawMode) {
+          parse();
+          render();
+        }
+      });
+  }
+
+  function load() {
+    rawMode = false;
+    parse();
+    render();
+  }
+
+  editor.addEventListener('input', e => {
+    const t = e.target;
+
+    if (t === raw) {
+      if (rawMode) parse();
+      return;
+    }
+
+    const dayId = Number(
+      t.dataset.day || t.dataset.dayname
+    );
+
+    const d = days.find(x => x.id === dayId);
+    if (!d) return;
+
+    if (t.dataset.dayname) {
+      d.name = t.value;
+    } else {
+      const a = d.items.find(
+        x => x.id === Number(t.dataset.item)
+      );
+
+      if (!a) return;
+
+      a[t.dataset.field] =
+        t.type === 'checkbox' ? t.checked : t.value;
+    }
+
+    sync();
+  });
+
+  editor.addEventListener('change', e => {
+    if (e.target.type === 'checkbox') {
+      e.target.dispatchEvent(
+        new Event('input', {bubbles: true})
+      );
+    }
+  });
+
+  editor.addEventListener('click', e => {
+    const b = e.target.closest('button[data-action]');
+    if (!b) return;
+
+    const act = b.dataset.action;
+    const d = days.find(
+      x => x.id === Number(b.dataset.day)
+    );
+
+    const index = d?.items.findIndex(
+      x => x.id === Number(b.dataset.item)
+    ) ?? -1;
+
+    if (act === 'add-day') {
+      days.push({
+        id: nextId++,
+        name: `יום ${days.length + 1}`,
+        items: []
+      });
+    }
+
+    if (act === 'remove-day' && d &&
+        confirm('למחוק את היום והפעילויות שבו?')) {
+      days = days.filter(x => x !== d);
+    }
+
+    if (act === 'add-item' && d) {
+      d.items.push({
+        id: nextId++,
+        time: '',
+        title: '',
+        description: '',
+        ticket: false,
+        image: '',
+        map: ''
+      });
+    }
+
+    if (act === 'remove' && index >= 0 &&
+        confirm('למחוק את הפעילות?')) {
+      d.items.splice(index, 1);
+    }
+
+    if (act === 'up' && index > 0) {
+      [d.items[index - 1], d.items[index]] =
+        [d.items[index], d.items[index - 1]];
+    }
+
+    if (act === 'down' && index >= 0 &&
+        index < d.items.length - 1) {
+      [d.items[index + 1], d.items[index]] =
+        [d.items[index], d.items[index + 1]];
+    }
+
+    sync();
+    render();
+  });
+
+  // Sync before the existing save handler runs.
+  form.addEventListener('submit', e => {
+    if (rawMode) return;
+
+    const error = validate();
+    if (error) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      alert(error);
+      return;
+    }
+
+    sync();
+  }, true);
+
+  // Reload editor when editing an existing trip.
+  document.addEventListener('click', e => {
+    if (e.target.closest('[onclick*="editTrip("]')) {
+      setTimeout(load, 0);
+    }
+  });
+
+  form.addEventListener('reset', () => {
+    setTimeout(load, 0);
+  });
+
+  load();
+})();
