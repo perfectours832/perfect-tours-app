@@ -1,5 +1,187 @@
 <!doctype html>
 <html lang="he" dir="rtl">
+  
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap');
+
+#clientPage {
+  background: #F6F3EC;
+  color: #243543;
+  font-family: 'Heebo', Arial, sans-serif;
+  min-height: 100vh;
+}
+
+#clientPage .hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 5%, #356274 0%, transparent 43%),
+    linear-gradient(135deg, #102C40, #1A4657);
+  border-radius: 0 0 34px 34px;
+  padding: 30px 18px 76px;
+  box-shadow: none;
+}
+
+#clientPage .hero:after {
+  content: '';
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border: 1px solid #FFFFFF29;
+  border-radius: 50%;
+  left: -110px;
+  bottom: -165px;
+  box-shadow: 0 0 0 42px #FFFFFF0C,
+              0 0 0 83px #FFFFFF09;
+  pointer-events: none;
+}
+
+#clientPage .hero h1 {
+  font-size: clamp(27px, 7vw, 41px);
+  line-height: 1.25;
+  letter-spacing: -.5px;
+  margin: 25px 0 9px;
+  color: white;
+  max-width: 620px;
+}
+
+#clientPage .hero p {
+  font-size: 15px;
+  color: #EEE4D0;
+  opacity: 1;
+  line-height: 1.6;
+}
+
+#clientPage .client {
+  max-width: 800px;
+  padding: 0 15px 70px;
+}
+
+#clientPage .quick {
+  margin-top: -40px;
+  position: relative;
+  z-index: 2;
+  gap: 9px;
+}
+
+#clientPage .quick a {
+  border: 1px solid #E7DDCA;
+  border-radius: 17px;
+  padding: 16px 8px;
+  background: white;
+  box-shadow: 0 7px 22px #283B4A12;
+  color: #173F4F;
+  font-size: 13px;
+}
+
+#clientPage .client-card {
+  background: #FFFEFB;
+  border: 1px solid #ECE5DA;
+  border-radius: 23px;
+  padding: 21px 19px;
+  box-shadow: 0 8px 27px #263C5010;
+  margin-top: 14px;
+}
+
+#clientPage .client-card h2 {
+  color: #243D49;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 800;
+  margin: 3px 0 17px;
+}
+
+#clientPage .client-card p {
+  line-height: 1.7;
+}
+
+#clientPage .info {
+  gap: 9px;
+}
+
+#clientPage .info div {
+  border: 1px solid #EDE7DD;
+  border-radius: 13px;
+  background: #F9F7F2;
+  padding: 12px;
+}
+
+#clientPage .info small {
+  color: #7A776D;
+}
+
+#clientPage #timeline .pt-day {
+  font-size: 17px;
+  color: #254657;
+  margin: 25px 1px 12px;
+  font-weight: 800;
+}
+
+#clientPage #timeline .pt-card {
+  background: white;
+  border: 1px solid #E5E0D5;
+  border-radius: 17px;
+  box-shadow: 0 3px 11px #1A3B4610;
+  margin: 9px 0;
+}
+
+#clientPage #timeline .pt-card[open] {
+  border-color: #C9AD7B;
+  box-shadow: 0 8px 24px #1A3B4616;
+}
+
+#clientPage #timeline .pt-card summary {
+  min-height: 66px;
+  padding: 14px 15px;
+  gap: 12px;
+}
+
+#clientPage #timeline .pt-hour {
+  color: #A17C3F;
+  font-size: 13px;
+  min-width: 48px;
+}
+
+#clientPage #timeline .pt-name {
+  color: #233844;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+#clientPage #timeline .pt-ticket {
+  color: #8B6035;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+#clientPage #timeline .pt-details {
+  background: #FFFEFC;
+  border-top: 1px solid #F0E9DD;
+  padding: 15px;
+}
+
+#clientPage #timeline .pt-desc {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #4E5A5D;
+}
+
+#clientPage #timeline .pt-alert {
+  background: #FCF5E8;
+  border: 1px solid #EBD7B6;
+  border-radius: 10px;
+  color: #77542E;
+}
+
+@media(max-width:520px) {
+  #clientPage .client-card {
+    padding: 20px 16px;
+  }
+}
+</style>
+
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
