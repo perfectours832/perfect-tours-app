@@ -201,12 +201,12 @@
     rows.forEach((r, i) => {
       const d = String(r.day ?? '');
 
-      if (d && d !== day) {
+      if (d && d !== day && r.title) {
         html += `<h3 class="pt-day">${esc(d)}</h3>`;
         day = d;
       }
 
-      const title = String(r.title ?? '');
+      const title = String(r.title || r.day || '');
       const ticket = paid(r.ticket_purchased);
       const photo = safeUrl(r.image_url);
       const map = safeUrl(r.map_url);
