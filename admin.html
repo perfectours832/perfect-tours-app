@@ -1,78 +1,11 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0c3554">
-<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
-<title>ניהול חופשות | Perfect Tours</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Perfect Tours</title>
+  <script src="legacy-entry.js" defer></script>
 </head>
-<body>
-<header class="topbar">
-  <div><div class="eyebrow">PERFECT TOURS</div><h1>מערכת ניהול חופשות</h1></div>
-  <div class="header-actions">
-    <button class="btn secondary small" id="installBtn" hidden>התקנת האפליקציה</button>
-    <button class="btn ghost small" id="logoutBtn" hidden>יציאה</button>
-  </div>
-</header>
-
-<main class="container">
-  <section class="panel login-panel" id="loginPanel">
-    <div class="section-title"><div><span class="eyebrow">כניסת מנהל</span><h2>התחברות למערכת</h2></div></div>
-    <form id="loginForm" class="form-grid">
-      <label class="full">אימייל<input id="loginEmail" type="email" autocomplete="username" required></label>
-      <label class="full">סיסמה<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-      <button class="btn primary full" type="submit">התחבר</button>
-    </form>
-    <p class="hint">יש ליצור משתמש מנהל אחד ב־Supabase Authentication.</p>
-  </section>
-
-  <div id="adminArea" hidden>
-    <section class="stats">
-      <div class="stat"><strong id="activeCount">0</strong><span>חופשות פעילות</span></div>
-      <div class="stat"><strong id="clientCount">0</strong><span>לקוחות</span></div>
-      <div class="stat"><strong id="docCount">0</strong><span>מסמכים</span></div>
-    </section>
-
-    <section class="panel">
-      <div class="section-title"><div><span class="eyebrow">לקוח חדש</span><h2>יצירת אפליקציה אישית</h2></div></div>
-      <form id="tripForm" class="form-grid">
-        <input type="hidden" id="editId">
-        <label>שם הלקוח<input id="clientName" required placeholder="יעקב כהן"></label>
-        <label>שם בן/בת הזוג<input id="partnerName" placeholder="רחל כהן"></label>
-        <label>יעד<input id="destination" required placeholder="רומא, איטליה"></label>
-        <label>תאריך יציאה<input id="startDate" type="date" required></label>
-        <label>תאריך חזרה<input id="endDate" type="date" required></label>
-        <label>מספר הזמנה<input id="bookingNumber" placeholder="PT-2026-001"></label>
-        <label>טלפון לקוח<input id="clientPhone" inputmode="tel"></label>
-        <label>שם המלון<input id="hotelName"></label>
-        <label class="full">קישור למלון במפות<input id="hotelMap" type="url"></label>
-        <label>טיסת הלוך<input id="outboundFlight" placeholder="LY 383 • 08:10"></label>
-        <label>טיסת חזור<input id="returnFlight" placeholder="LY 384 • 21:40"></label>
-        <label class="full">הודעה אישית<textarea id="welcomeMessage"></textarea></label>
-        <label class="full">תוכנייה יומית
-          <textarea id="itinerary" placeholder="יום 1 | 09:00 | נחיתה והעברה | הנהג ימתין ביציאה"></textarea>
-          <small>כל שורה: יום | שעה | כותרת | תיאור</small>
-        </label>
-        <label class="full">מסמכים וקישורים
-          <textarea id="documents" placeholder="כרטיסי טיסה | https://..."></textarea>
-          <small>כל שורה: שם המסמך | קישור</small>
-        </label>
-        <div class="form-actions full">
-          <button class="btn primary" id="saveBtn" type="submit">צור אפליקציה ללקוח</button>
-          <button class="btn secondary" id="cancelEdit" type="button" hidden>ביטול עריכה</button>
-        </div>
-      </form>
-    </section>
-
-    <section class="panel">
-      <div class="section-title"><div><span class="eyebrow">לקוחות</span><h2>חופשות שנוצרו</h2></div></div>
-      <div id="tripList" class="trip-list"><p>טוען...</p></div>
-    </section>
-  </div>
-</main>
-<div id="toast" class="toast"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script><script src="app.js"></script><script src="admin.js"></script>
-</body>
+<body><p>מעבירים למערכת Perfect Tours…</p><noscript><p>יש להפעיל JavaScript כדי לפתוח את הקישור האישי.</p></noscript><a href="./">פתיחת המערכת</a></body>
 </html>
