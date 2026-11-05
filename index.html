@@ -54,4 +54,7 @@ function renderClient(){const t=window.clientTrip;document.documentElement.lang=
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBar').classList.remove('hidden')});$('installBtn').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBar').classList.add('hidden')};$('installClose').onclick=()=>$('installBar').classList.add('hidden');window.addEventListener('appinstalled',()=>toast('האפליקציה הותקנה בהצלחה'));
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));start();
 </script>
+  
+<script src="client-cards-v1.js"></script>
+
 </body></html>
