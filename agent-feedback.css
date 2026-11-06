@@ -1,0 +1,66 @@
+.agent-feedback { color: #244355; min-width: 0; }
+.agent-feedback * { box-sizing: border-box; }
+.agent-feedback h3 { font-size: 20px; margin: 0 0 5px; color: #143c54; }
+.agent-feedback h4 { font-size: 16px; margin: 0 0 12px; color: #143c54; }
+.agent-feedback p { font-size: 13px; line-height: 1.7; margin: 6px 0; }
+.agent-feedback button { border: 1px solid #cbd8df; border-radius: 9px; min-height: 40px; padding: 8px 12px; color: #234b60; background: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.agent-feedback button:hover { background: #f0f5f7; border-color: #849fae; }
+.agent-feedback button:disabled { opacity: .5; cursor: default; }
+.agent-feedback .af-primary { background: #143c54; border-color: #143c54; color: #fff; }
+.agent-feedback .af-primary:hover { background: #1c4c66; }
+.agent-feedback :is(button, select, textarea):focus-visible { outline: 3px solid #b28b43; outline-offset: 2px; }
+.agent-feedback :is(select, textarea) { width: 100%; font: inherit; font-weight: 400; font-size: 13px; color: #244355; min-width: 0; padding: 9px 10px; border: 1px solid #cdd9df; border-radius: 8px; background: #fff; margin-top: 5px; min-height: 40px; }
+.agent-feedback textarea { resize: vertical; line-height: 1.7; }
+.agent-feedback label { font-size: 13px; font-weight: 600; display: block; }
+.agent-feedback .af-heading, .agent-feedback .af-section-heading { display: flex; justify-content: space-between; align-items: start; gap: 12px; flex-wrap: wrap; }
+.agent-feedback .af-heading { margin-bottom: 16px; }
+.agent-feedback .af-heading p, .agent-feedback .af-note { color: #627682; }
+.agent-feedback .af-trip-label { max-width: 500px; margin-bottom: 16px; }
+.agent-feedback .af-message { padding: 10px 12px; border: 1px solid #c9ded2; border-radius: 9px; background: #f0f8f3; margin-bottom: 14px; font-size: 13px; line-height: 1.7; }
+.agent-feedback .af-message:empty { display: none; }
+.agent-feedback .af-error { color: #9b3939; }
+.agent-feedback .af-message.af-error { background: #fff5f2; border-color: #edcdc4; }
+.agent-feedback .af-toolbar { display: flex; align-items: end; gap: 12px; justify-content: space-between; margin: 12px 0; flex-wrap: wrap; }
+.agent-feedback .af-toolbar label { min-width: 220px; max-width: 400px; flex: 1; }
+.agent-feedback .af-section { border: 1px solid #dde5e9; border-radius: 12px; padding: 16px; background: #fafcfd; margin-top: 14px; }
+.agent-feedback .af-section-heading > span { font-size: 12px; color: #627682; }
+.agent-feedback .af-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-bottom: 10px; }
+.agent-feedback .af-counts > div { background: #fff; border: 1px solid #e0e7eb; border-radius: 9px; text-align: center; padding: 10px 6px; }
+.agent-feedback .af-counts strong { display: block; font-size: 21px; font-weight: 600; }
+.agent-feedback .af-counts span { font-size: 12px; color: #627682; }
+.agent-feedback .af-activity { border: 1px solid #dfe7eb; border-radius: 9px; background: #fff; padding: 12px; margin-top: 9px; }
+.agent-feedback .af-activity > header, .agent-feedback .af-request > header { display: flex; align-items: center; gap: 9px; font-size: 14px; flex-wrap: wrap; }
+.agent-feedback .af-activity > header > strong, .agent-feedback .af-request > header > strong { flex: 1; min-width: 100px; overflow-wrap: anywhere; }
+.agent-feedback .af-time { color: #7c683f; font-size: 12px; min-width: 38px; }
+.agent-feedback .af-status, .agent-feedback .af-request-status { font-size: 11px; font-weight: 600; border-radius: 20px; padding: 4px 9px; background: #edf1f4; color: #536b77; white-space: nowrap; }
+.agent-feedback .af-status-done, .agent-feedback .af-request-approved { background: #e8f3eb; color: #36704b; }
+.agent-feedback .af-status-skipped, .agent-feedback .af-request-rejected { background: #f9eae7; color: #934f43; }
+.agent-feedback .af-status-deferred, .agent-feedback .af-request-pending { background: #fbf1dc; color: #876326; }
+.agent-feedback .af-request-alternative { background: #e9eff8; color: #3e5e8b; }
+.agent-feedback .af-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin: 12px 0 0; }
+.agent-feedback .af-details dt { color: #6b7b85; font-size: 11px; }
+.agent-feedback .af-details dd { margin: 3px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; }
+.agent-feedback .af-wide { grid-column: 1 / -1; }
+.agent-feedback .af-empty { color: #6b7b85; padding: 5px 0; }
+.agent-feedback .af-request { border: 1px solid #dde5e9; background: #fff; border-radius: 10px; padding: 14px; margin-top: 12px; }
+.agent-feedback .af-request-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.agent-feedback .af-request-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.agent-feedback .af-saved-reply { background: #f4f7f9; border-radius: 8px; padding: 10px; margin-top: 10px; }
+.agent-feedback .af-saved-reply strong { font-size: 12px; }
+.agent-feedback .af-saved-reply p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.agent-feedback .af-archived { margin-top: 12px; font-size: 13px; }
+.agent-feedback .af-archived summary { cursor: pointer; color: #526d7c; }
+.agent-feedback .af-response { margin-top: 18px; border: 1px solid #c9ab6e; border-radius: 12px; padding: 16px; background: #fffdf8; scroll-margin-top: 90px; }
+.agent-feedback .af-response fieldset[data-af-response-fields] { border: 0; padding: 0; margin: 14px 0 0; min-width: 0; }
+.agent-feedback [data-af-approval-editor] { margin-block: 14px; }
+.agent-feedback [data-af-action=submit-response] { margin-top: 12px; }
+.agent-feedback [data-af-response-message] { min-height: 22px; }
+.agent-feedback .af-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 580px) {
+  .agent-feedback .af-section, .agent-feedback .af-response { padding: 12px; }
+  .agent-feedback .af-activity, .agent-feedback .af-request { padding: 10px; }
+  .agent-feedback .af-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agent-feedback .af-toolbar label { min-width: 0; max-width: none; width: 100%; flex-basis: 100%; }
+  .agent-feedback .af-details { gap: 9px; }
+  .agent-feedback .af-request-actions > button { flex: 1 1 auto; }
+}

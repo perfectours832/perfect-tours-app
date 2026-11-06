@@ -1,0 +1,16 @@
+{
+  "name": "perfect-tours-app",
+  "private": true,
+  "version": "0.2.0",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:model": "node --test test/itinerary-model.test.js",
+    "test:browser": "node --test test/browser.test.js",
+    "test:feedback": "node --test test/feedback*.test.js",
+    "test:database": "bash scripts/test-database.sh",
+    "start": "python3 -m http.server 4173 --bind 127.0.0.1"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
