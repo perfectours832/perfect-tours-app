@@ -48,7 +48,7 @@ run_sql() {
 }
 
 run_sql feedback_test < "$repo_dir/test/database/fixture.sql"
-run_sql feedback_test < "$repo_dir/supabase/migrations/20261106064512_feedback.sql"
+run_sql feedback_test < "$repo_dir/supabase/migrations/20261106070833_perfect_tours_feedback_v1.sql"
 run_sql feedback_test < "$repo_dir/test/database/assertions.sql"
 
 # A failed preflight must leave every feedback object unapplied.
@@ -67,7 +67,7 @@ SQL
 ALTER TABLE public.trips ALTER COLUMN itinerary TYPE text USING itinerary::text;
 SQL
   fi
-  if run_sql "$database_name" < "$repo_dir/supabase/migrations/20261106064512_feedback.sql" >"$log_dir/$scenario.log" 2>&1; then
+  if run_sql "$database_name" < "$repo_dir/supabase/migrations/20261106070833_perfect_tours_feedback_v1.sql" >"$log_dir/$scenario.log" 2>&1; then
     echo "Expected migration preflight to reject $scenario." >&2
     exit 1
   fi
