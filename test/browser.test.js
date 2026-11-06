@@ -46,7 +46,7 @@ async function openFixture(t, options = {}) {
     const url = new URL(route.request().url());
     if (url.origin === baseURL) return route.continue();
     external.push(url.href);
-    if (url.hostname === 'cdn.jsdelivr.net' && url.pathname === '/npm/@supabase/supabase-js@2') {
+    if (url.hostname === 'cdn.jsdelivr.net' && /^\/npm\/@supabase\/supabase-js@2(?:\.\d+\.\d+)?$/.test(url.pathname)) {
       return route.fulfill({ status: 200, contentType: 'application/javascript', body: mockScript(mockOptions) });
     }
     if (url.hostname === 'images.example.test') {

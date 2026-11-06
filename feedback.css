@@ -1,0 +1,206 @@
+/* Private trip feedback. Scoped to the client so agent forms remain independent. */
+#clientPage .cf-section {
+  min-width: 0;
+  margin-top: 16px;
+  padding-top: 15px;
+  border-top: 1px solid var(--edge, #e8e2d7);
+  color: var(--ink, #17374a);
+  font-size: 13px;
+  line-height: 1.65;
+}
+#clientPage .cf-section h3,
+#clientPage .cf-trip-review h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--ink, #17374a);
+}
+#clientPage .cf-section h4 { margin: 13px 0 8px; font-size: 14px; font-weight: 500; }
+#clientPage .cf-status-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 25px; margin: 0 0 10px; font-size: 12px; }
+#clientPage .cf-state-badge,
+#clientPage .cf-request-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: #edf0f0;
+  color: #5d6f79;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+#clientPage .cf-state-badge[data-status="done"] { background: #eaf2eb; color: #3e674b; }
+#clientPage .cf-state-badge[data-status="skipped"] { background: #f4ece7; color: #85634e; }
+#clientPage .cf-state-badge[data-status="deferred"] { background: #f5efdf; color: #8d713c; }
+#clientPage .cf-state-badge[data-status="unreported"] { background: #edf0f0; color: #6b7980; }
+#clientPage .cf-saved { color: #426b50; font-size: 11px; }
+#clientPage .cf-unsaved { color: #8e713d; font-size: 11px; }
+#clientPage .cf-form { margin: 0; min-width: 0; }
+#clientPage .cf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin: 10px 0; }
+#clientPage .cf-full { grid-column: 1 / -1; }
+#clientPage .cf-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin: 0; font-size: 12px; color: #4b626e; font-weight: 500; }
+#clientPage .cf-field > span { display: block; }
+#clientPage .cf-field input,
+#clientPage .cf-field select,
+#clientPage .cf-field textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 11px;
+  border: 1px solid #dce1df;
+  border-radius: 8px;
+  background: #fffefa;
+  color: #294859;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  box-shadow: none;
+}
+#clientPage .cf-field textarea { min-height: 78px; resize: vertical; }
+#clientPage .cf-field input::placeholder,
+#clientPage .cf-field textarea::placeholder { color: #89938f; font-size: 12px; opacity: 1; }
+#clientPage .cf-field input:focus-visible,
+#clientPage .cf-field select:focus-visible,
+#clientPage .cf-field textarea:focus-visible { outline: 2px solid #b28a48; outline-offset: 2px; border-color: #b28a48; }
+#clientPage .cf-field input:disabled,
+#clientPage .cf-field select:disabled,
+#clientPage .cf-field textarea:disabled { opacity: .65; background: #f3f2ed; }
+#clientPage .cf-choice-group,
+#clientPage .cf-rating { min-width: 0; padding: 0; border: 0; margin: 10px 0 12px; }
+#clientPage .cf-choice-group > legend,
+#clientPage .cf-rating > legend { padding: 0; margin-bottom: 7px; font-size: 12px; font-weight: 500; color: #4b626e; }
+#clientPage .cf-status-options { display: flex; gap: 6px; flex-wrap: wrap; }
+#clientPage .cf-status-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  gap: 6px;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #dde1dc;
+  border-radius: 8px;
+  background: #fffefa;
+  color: #536a74;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+#clientPage .cf-status-option input {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  margin: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  accent-color: var(--navy, #102d42);
+  cursor: pointer;
+}
+#clientPage .cf-status-option:has(input:checked) { border-color: #36566a; background: #edf1f2; color: #17374a; }
+#clientPage .cf-status-option:has(input:focus-visible) { outline: 2px solid #b28a48; outline-offset: 2px; }
+#clientPage .cf-status-option:has(input:disabled) { opacity: .6; cursor: wait; }
+#clientPage .cf-rating-options { display: flex; gap: 7px; flex-wrap: wrap; }
+#clientPage .cf-rating-option { display: block; position: relative; margin: 0; font-size: 14px; font-weight: 500; color: #7c6b4b; cursor: pointer; }
+#clientPage .cf-rating-option input { position: absolute; width: 1px; height: 1px; min-height: 0; margin: 0; padding: 0; border: 0; opacity: 0; clip-path: inset(50%); overflow: hidden; }
+#clientPage .cf-rating-option > span { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; box-sizing: border-box; padding: 7px 10px; border: 1px solid #e2d8c6; border-radius: 9px; background: #fffefa; line-height: 1.4; }
+#clientPage .cf-rating-option input:checked + span { color: #fff; background: #947542; border-color: #947542; }
+#clientPage .cf-rating-option input:focus-visible + span { outline: 2px solid #b28a48; outline-offset: 3px; }
+#clientPage .cf-rating-option:has(input:disabled) { opacity: .6; cursor: wait; }
+#clientPage .cf-hint,
+#clientPage .cf-private-note { margin: 6px 0 10px; color: #74817e; font-size: 11px; line-height: 1.7; font-weight: 400; }
+#clientPage .cf-private-note { color: #6b7d73; }
+#clientPage .cf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+#clientPage .cf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 15px;
+  border: 1px solid var(--navy, #102d42);
+  border-radius: 8px;
+  background: var(--navy, #102d42);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: normal;
+}
+#clientPage .cf-button.cf-secondary { background: #f2f3ee; color: #496373; border-color: #dce1da; }
+#clientPage .cf-button:focus-visible { outline: 2px solid #b28a48; outline-offset: 3px; }
+#clientPage .cf-button:disabled { opacity: .55; cursor: wait; }
+#clientPage .cf-error { margin: 9px 0 0; border-radius: 7px; border-inline-start: 2px solid #b77766; padding: 8px 10px; color: #8c4538; background: #f9eeea; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+#clientPage .cf-message { margin: 9px 0 0; color: #426b50; font-size: 12px; line-height: 1.7; }
+#clientPage .cf-request-list { margin-top: 10px; display: grid; gap: 8px; }
+#clientPage .cf-request { padding: 10px 11px; border: 1px solid #e5e3db; border-radius: 9px; background: #f9f8f3; min-width: 0; }
+#clientPage .cf-request p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.7; margin: 7px 0 0; color: #526974; }
+#clientPage .cf-request-status { background: #f3ecdc; color: #8a713c; }
+#clientPage .cf-request-status[data-status="alternative"],
+#clientPage .cf-request-status[data-status="proposed"],
+#clientPage .cf-request-status[data-status="alternative_proposed"] { background: #e9eff2; color: #496777; }
+#clientPage .cf-request-status[data-status="approved"],
+#clientPage .cf-request-status[data-status="applied"],
+#clientPage .cf-request-status[data-status="completed"] { background: #eaf2eb; color: #426b50; }
+#clientPage .cf-request-status[data-status="rejected"] { background: #f4ebe6; color: #8a6150; }
+#clientPage .cf-agent-response { border-inline-start: 2px solid #c6ae7e; padding-inline-start: 9px; margin-top: 8px; }
+#clientPage .cf-agent-response > strong { font-size: 11px; font-weight: 500; color: #806c49; }
+#clientPage .cf-agent-response p { margin-top: 3px; color: #405e6d; }
+#clientPage .cf-day-summary { border: 1px solid var(--edge, #e8e2d7); border-radius: 12px; background: var(--paper, #fffefa); margin-top: 14px; padding: 14px; }
+#clientPage .cf-day-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin: 10px 0 12px; }
+#clientPage .cf-day-counts > div { min-width: 0; text-align: center; padding: 8px 3px; border-radius: 8px; background: #f4f3ed; }
+#clientPage .cf-day-counts strong { display: block; color: #365262; font-size: 17px; font-weight: 500; line-height: 1.4; }
+#clientPage .cf-day-counts span { display: block; color: #75817d; font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+#clientPage .cf-details { border: 0; margin: 0; padding: 0; }
+#clientPage .cf-section .cf-details > summary,
+#clientPage .cf-day-summary .cf-details > summary,
+#clientPage .cf-trip-review .cf-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  box-sizing: border-box;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  border: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #365262;
+  cursor: pointer;
+}
+#clientPage .cf-details > summary::-webkit-details-marker { display: none; }
+#clientPage .cf-details > summary::after { content: ''; display: block; flex: 0 0 auto; width: 6px; height: 6px; margin-inline-end: 4px; border-inline-end: 1px solid #a18b64; border-bottom: 1px solid #a18b64; transform: rotate(45deg); }
+#clientPage .cf-details[open] > summary::after { transform: rotate(225deg); }
+#clientPage .cf-details > summary:focus-visible { outline: 2px solid #b28a48; outline-offset: 3px; border-radius: 5px; }
+#clientPage .cf-trip-review { margin-top: 14px; border: 1px solid var(--edge, #e8e2d7); border-radius: 14px; padding: 16px; background: var(--paper, #fffefa); }
+#clientPage .cf-readonly { color: #74817e; font-size: 12px; line-height: 1.8; margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+#clientPage .cf-section [hidden],
+#clientPage .cf-day-summary [hidden],
+#clientPage .cf-trip-review [hidden] { display: none !important; }
+@media (max-width: 359px) {
+  #clientPage .cf-grid { grid-template-columns: minmax(0, 1fr); }
+  #clientPage .cf-rating-options { gap: 5px; }
+  #clientPage .cf-status-option { padding-inline: 8px; font-size: 11px; }
+  #clientPage .cf-day-summary { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #clientPage .cf-section *,
+  #clientPage .cf-day-summary *,
+  #clientPage .cf-trip-review * { transition: none; }
+}
+
+#clientPage .cf-grid > .cf-rating { grid-column: 1 / -1; }

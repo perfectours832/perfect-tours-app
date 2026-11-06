@@ -153,7 +153,7 @@
     return days.flatMap(day => {
       if (!isRecord(day) || !Array.isArray(day.activities)) throw new TypeError('Invalid itinerary day.');
       const common = {
-        day_id: identifier(day.id) || createId(), day: stringValue(day.label), day_date: stringValue(day.date)
+        day_id: identifier(day.id) && !/^day-index-\d+$/.test(day.id) ? day.id : createId(), day: stringValue(day.label), day_date: stringValue(day.date)
       };
       const rows = [];
       if (!day.activities.length || isRecord(day._marker)) {
@@ -165,7 +165,7 @@
         }
         rows.push({
           ...clone(activity),
-          activity_id: identifier(activity.activity_id) || createId(), ...common,
+          activity_id: identifier(activity.activity_id) && !/^activity-index-\d+$/.test(activity.activity_id) ? activity.activity_id : createId(), ...common,
           time: activity.time ?? '', title: activity.title, description: activity.description ?? '',
           duration_minutes: activity.duration_minutes ?? '', address: activity.address ?? '',
           ticket_purchased: paid(activity.ticket_purchased), entry_time: activity.entry_time ?? '',

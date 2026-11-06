@@ -50,6 +50,7 @@ const structuredTrip = {
     { name: 'קישור מסוכן לבדיקה', url: 'javascript:alert("unsafe-document")' },
   ],
   created_at: '2026-11-01T00:00:00.000Z',
+  updated_at: '2026-11-01T00:00:00.000Z',
 };
 
 const legacyTrip = {
@@ -72,14 +73,34 @@ const settings = {
 function installMock(config) {
   const clone = value => JSON.parse(JSON.stringify(value));
   const fixture = clone(config);
+  let savedFeedback = null;
+  if (fixture.feedbackEnabled) {
+    try { savedFeedback = JSON.parse(sessionStorage.getItem('pt-feedback-synthetic-db')); } catch (_) {}
+  }
   window.__testWrites = [];
+  window.__testRpcWrites = [];
   window.__testCalls = [];
   window.__testFailure = null;
-  window.__testTrips = fixture.trips;
+  window.__testTrips = savedFeedback?.trips || fixture.trips;
+  window.__testTrips.forEach(trip => {
+    if (!Object.hasOwn(trip, 'updated_at')) trip.updated_at = trip.created_at || null;
+  });
+  window.__testFeedback = savedFeedback?.feedback || clone(fixture.feedback || {});
+  window.__testRpcFailures = clone(fixture.rpcFailures || {});
+  window.__testRpcResponseFailures = clone(fixture.rpcResponseFailures || {});
   window.__testDelay = clone(fixture.delays || {});
   window.__testPending = [];
   let session = fixture.authenticated ? { user: { id: 'test-owner-only', email: 'test@example.test' } } : null;
   let authCallback = null;
+  let revision = 0;
+  const persistFeedback = () => {
+    if (fixture.feedbackEnabled) sessionStorage.setItem('pt-feedback-synthetic-db', JSON.stringify({ trips: window.__testTrips, feedback: window.__testFeedback }));
+  };
+  const feedbackState = tripId => {
+    if (!window.__testFeedback[tripId]) window.__testFeedback[tripId] = { version: 1, reports: [], day_summaries: [], trip_review: null, requests: [] };
+    return window.__testFeedback[tripId];
+  };
+  const stamp = () => new Date(Date.UTC(2026, 10, 6, 0, 0, ++revision)).toISOString();
 
   // Delay responses, rather than using sleeps, to exercise in-flight save and
   // authentication races deterministically. Results are captured at query time.
@@ -97,12 +118,15 @@ function installMock(config) {
   };
 
   function tableQuery(table) {
-    const state = { table, operation: 'select', payload: null, filter: null, single: false };
+    const state = { table, operation: 'select', payload: null, filter: null, filters: [], single: false, returning: false, columns: '*' };
+    const matches = row => state.filters.every(({ field, value, operator }) => operator === 'is' && value === null ? row[field] == null : row[field] === value);
+    const projection = row => state.columns === '*' ? clone(row) : Object.fromEntries(state.columns.split(',').map(key => key.trim()).filter(Boolean).map(key => [key, row[key]]));
     const query = {
-      select() { return query; },
+      select(columns = '*') { state.columns = columns; state.returning = state.operation !== 'select'; return query; },
       order() { return query; },
       limit() { return query; },
-      eq(field, value) { state.filter = [field, value]; return query; },
+      eq(field, value) { state.filter ||= [field, value]; state.filters.push({ field, value, operator: 'eq' }); return query; },
+      is(field, value) { state.filter ||= [field, value]; state.filters.push({ field, value, operator: 'is' }); return query; },
       maybeSingle() { state.single = true; return query; },
       single() { state.single = true; return query; },
       insert(payload) { state.operation = 'insert'; state.payload = clone(payload); return query; },
@@ -114,23 +138,34 @@ function installMock(config) {
           window.__testCalls.push(clone(state));
           if (state.operation === 'select') {
             let data = table === 'business_settings' ? [fixture.settings] : window.__testTrips;
-            if (state.filter) data = data.filter(row => row[state.filter[0]] === state.filter[1]);
+            data = data.filter(matches);
             return deliver(`${table}:select`, { data: clone(state.single ? data[0] || null : data), error: null }).then(resolve, reject);
           }
           if (window.__testFailure) {
             return deliver(`${table}:${state.operation}`, { data: null, error: { message: window.__testFailure } }).then(resolve, reject);
           }
-          window.__testWrites.push(clone(state));
+          let affected = [];
           if (table === 'trips') {
             if (state.operation === 'update') {
-              window.__testTrips = window.__testTrips.map(row => !state.filter || row[state.filter[0]] === state.filter[1] ? { ...row, ...clone(state.payload) } : row);
+              window.__testTrips = window.__testTrips.map(row => {
+                if (!matches(row)) return row;
+                const updated = { ...row, ...clone(state.payload) };
+                affected.push(updated);
+                return updated;
+              });
             } else if (state.operation === 'insert') {
-              window.__testTrips.push({ id: 'test-created-trip', ...clone(state.payload) });
+              const inserted = { id: 'test-created-trip', ...clone(state.payload) };
+              window.__testTrips.push(inserted);
+              affected.push(inserted);
             } else if (state.operation === 'delete') {
-              window.__testTrips = window.__testTrips.filter(row => !state.filter || row[state.filter[0]] !== state.filter[1]);
+              affected = window.__testTrips.filter(matches);
+              window.__testTrips = window.__testTrips.filter(row => !matches(row));
             }
           }
-          return deliver(`${table}:${state.operation}`, { data: null, error: null }).then(resolve, reject);
+          if (affected.length || table !== 'trips') window.__testWrites.push(clone(state));
+          persistFeedback();
+          const rows = state.returning ? affected.map(projection) : null;
+          return deliver(`${table}:${state.operation}`, { data: rows && state.single ? rows[0] || null : rows, error: null }).then(resolve, reject);
         } catch (error) { return Promise.reject(error).then(resolve, reject); }
       },
     };
@@ -159,7 +194,80 @@ function installMock(config) {
             const trip = window.__testTrips.find(item => item.public_id === args.lookup_public_id);
             return { data: trip ? [clone(trip)] : [], error: null };
           }
-          return { data: null, error: { message: 'Unexpected test RPC' } };
+          const missing = { data: null, error: { code: 'PGRST202', message: `Could not find the function public.${name} in the schema cache` } };
+          if (!name.startsWith('pt_feedback_') || !fixture.feedbackEnabled) return missing;
+          const failure = window.__testRpcFailures[name];
+          if (failure) return deliver(name, { data: null, error: typeof failure === 'string' ? { code: 'TEST_FAILURE', message: failure } : clone(failure) });
+          let trip;
+          if (name === 'pt_feedback_agent') trip = window.__testTrips.find(item => item.id === args.p_trip_id);
+          else if (name === 'pt_feedback_resolve_request') {
+            trip = window.__testTrips.find(item => feedbackState(item.id).requests.some(request => request.id === args.p_request_id));
+          } else trip = window.__testTrips.find(item => item.public_id === args.p_public_id);
+          if (!trip) return deliver(name, { data: null, error: { code: '42501', message: 'Synthetic trip not found' } });
+          if ((name === 'pt_feedback_agent' || name === 'pt_feedback_resolve_request') && !session) return deliver(name, { data: null, error: { code: '42501', message: 'Authentication required' } });
+          if (trip.status === 'draft' && name !== 'pt_feedback_agent' && name !== 'pt_feedback_resolve_request') return deliver(name, { data: null, error: { code: '42501', message: 'Trip is not published' } });
+          if (name === 'pt_feedback_public_trip') {
+            const publicFields = ['public_id', 'client_name', 'partner_name', 'destination', 'booking_number', 'start_date', 'end_date', 'language', 'status', 'hotel_name', 'hotel_map', 'outbound_flight', 'return_flight', 'welcome_message', 'itinerary', 'documents', 'updated_at'];
+            return deliver(name, { data: clone(Object.fromEntries(publicFields.filter(key => Object.hasOwn(trip, key)).map(key => [key, trip[key]]))), error: null });
+          }
+          const state = feedbackState(trip.id);
+          const envelope = () => ({ ...clone(state), trip_updated_at: trip.updated_at });
+          const error = (message, code = '22023') => deliver(name, { data: null, error: { code, message } });
+          const put = (list, key, value) => {
+            const keys = Array.isArray(key) ? key : [key];
+            const index = list.findIndex(item => keys.every(field => item[field] === value[field]));
+            if (index < 0) list.push(value); else list[index] = value;
+          };
+          if (name === 'pt_feedback_client' || name === 'pt_feedback_agent') return deliver(name, { data: envelope(), error: null });
+          const activity = Array.isArray(trip.itinerary) && trip.itinerary.find(item => item.activity_id === args.p_activity_id);
+          if (name === 'pt_feedback_save_activity') {
+            if (!activity) return error('Unknown activity');
+            if (args.p_day_id !== activity.day_id) return error('revision_conflict: the activity has moved to a different day', '40001');
+            if (!['done', 'skipped', 'deferred'].includes(args.p_status)) return error('Choose an activity status');
+            if (args.p_status === 'skipped' && !String(args.p_reason || '').trim()) return error('A reason is required when skipping');
+            put(state.reports, ['activity_id', 'day_id'], {
+              activity_id: args.p_activity_id, day_id: activity.day_id, activity_title: activity.title, day_label: activity.day, status: args.p_status,
+              reason: args.p_reason || '', delay_minutes: args.p_delay_minutes || 0,
+              rating: args.p_rating || null, comment: args.p_comment || '', updated_at: stamp(),
+            });
+          } else if (name === 'pt_feedback_save_day') {
+            const dayExists = Array.isArray(trip.itinerary) && trip.itinerary.some(item => item.day_id === args.p_day_id);
+            if (!dayExists) return error('Unknown day');
+            const day = trip.itinerary.find(item => item.day_id === args.p_day_id);
+            put(state.day_summaries, 'day_id', { day_id: args.p_day_id, day_label: day.day, rating: args.p_rating || null, comment: args.p_comment || '', tomorrow_preferences: args.p_tomorrow_preferences || '', submitted_at: stamp() });
+          } else if (name === 'pt_feedback_save_trip') {
+            state.trip_review = { vacation_rating: args.p_vacation_rating || null, service_rating: args.p_service_rating || null, comment: args.p_comment || '', submitted_at: stamp() };
+          } else if (name === 'pt_feedback_request_change') {
+            if (!activity) return error('Unknown activity');
+            if (!String(args.p_message || '').trim()) return error('Write a change request');
+            if (!state.requests.some(request => request.client_request_id === args.p_client_request_id)) {
+              state.requests.push({
+                id: `00000000-0000-4000-8000-${String(state.requests.length + 1).padStart(12, '0')}`,
+                activity_id: args.p_activity_id, day_id: activity.day_id, client_request_id: args.p_client_request_id,
+                activity_title: activity.title, day_label: activity.day,
+                request_text: args.p_message, agent_reply: '', status: 'pending', created_at: stamp(), resolved_at: null,
+              });
+            }
+          } else if (name === 'pt_feedback_resolve_request') {
+            const request = state.requests.find(item => item.id === args.p_request_id);
+            if (!request || !['approved', 'alternative', 'rejected'].includes(args.p_status)) return error('Invalid request response');
+            if (request.status !== 'pending') return error('revision_conflict: the request was already handled', '40001');
+            if (!String(args.p_reply || '').trim()) return error('Write a reply');
+            if (args.p_status === 'approved') {
+              if (!Array.isArray(args.p_itinerary) || JSON.stringify(args.p_itinerary) === JSON.stringify(trip.itinerary)) return error('Approval requires an actual itinerary change');
+              if (args.p_expected_updated_at !== trip.updated_at) return error('revision_conflict: the itinerary has changed', '40001');
+              trip.itinerary = clone(args.p_itinerary);
+              trip.updated_at = stamp();
+            }
+            request.status = args.p_status;
+            request.agent_reply = args.p_reply;
+            request.resolved_at = stamp();
+          } else return missing;
+          window.__testRpcWrites.push({ rpc: name, args: clone(args) });
+          persistFeedback();
+          const responseFailure = window.__testRpcResponseFailures[name];
+          if (responseFailure) return deliver(name, { data: null, error: typeof responseFailure === 'string' ? { code: 'TEST_FAILURE', message: responseFailure } : clone(responseFailure) });
+          return deliver(name, { data: envelope(), error: null });
         },
       };
     },

@@ -12,10 +12,12 @@
   let settings = { ...defaults };
   let trips = [];
   let db, editor, toastTimer, activeUserId;
+  let agentFeedback, agentFeedbackService, clientFeedback, clientFeedbackService;
   let originalDocuments = [], documentsText = '';
   let saving = false;
   let tripDirty = false;
   let sessionGeneration = 0;
+  let editingRevision = null;
   let lang = 'he';
 
   function toast(message) {
@@ -85,6 +87,7 @@
     if (error) throw new Error('טעינת החופשות נכשלה: ' + error.message);
     trips = data || [];
     renderTrips();
+    agentFeedback?.loadTrips(trips);
   }
 
   function renderTrips() {
@@ -197,6 +200,7 @@
     editor.load(trip.itinerary);
     loadDocuments(trip.documents);
     $('editId').value = trip.id;
+    editingRevision = trip.updated_at ?? null;
     $('editorTitle').textContent = 'עריכת החופשה של ' + trip.client_name;
     $('saveBtn').textContent = 'שמור שינויים';
     $('cancelBtn').classList.remove('hidden');
@@ -208,6 +212,7 @@
   function resetForm() {
     $('tripForm').reset();
     $('editId').value = '';
+    editingRevision = null;
     $('editorTitle').textContent = 'יצירת חופשה';
     $('saveBtn').textContent = 'צור אפליקציה';
     $('cancelBtn').classList.add('hidden');
@@ -250,11 +255,20 @@
       saving = true; $('saveBtn').disabled = true; $('saveBtn').textContent = 'שומר…';
       $('adminPage').inert = true;
       $('tripForm').setAttribute('aria-busy', 'true');
-      const result = id
-        ? await db.from('trips').update(payload).eq('id', id)
-        : await db.from('trips').insert({ ...payload, public_id: publicToken() });
+      let result;
+      if (id) {
+        let query = db.from('trips').update(payload).eq('id', id);
+        query = editingRevision === null
+          ? query.is('updated_at', null) : query.eq('updated_at', editingRevision);
+        result = await query.select('id,updated_at');
+      } else {
+        result = await db.from('trips').insert({ ...payload, public_id: publicToken() });
+      }
       if (generation !== sessionGeneration) return;
       if (result.error) throw new Error('השמירה נכשלה: ' + result.error.message);
+      if (id && (!Array.isArray(result.data) || result.data.length !== 1)) {
+        throw new Error('החופשה עודכנה במסך אחר. הטיוטה שלך נשארה כאן; טען את החופשה מחדש לפני שמירה.');
+      }
       resetForm();
       toast(id ? 'השינויים נשמרו' : 'החופשה נוצרה');
       saving = false;
@@ -280,6 +294,9 @@
     $('logoutBtn').classList.toggle('hidden', !on);
     if (!on) {
       sessionGeneration += 1;
+      agentFeedback?.destroy(); agentFeedback = null;
+      agentFeedbackService?.destroy(); agentFeedbackService = null;
+      $('agentFeedback').replaceChildren();
       activeUserId = undefined; trips = []; resetForm(); renderTrips();
       settings = { ...defaults }; applyBrand(); return;
     }
@@ -287,6 +304,14 @@
     if (userId && userId === activeUserId) return;
     sessionGeneration += 1;
     const generation = sessionGeneration;
+    agentFeedback?.destroy();
+    agentFeedbackService?.destroy();
+    agentFeedbackService = new window.FeedbackService(db);
+    agentFeedback = new window.AgentFeedback({
+      host: $('agentFeedback'), service: agentFeedbackService, TripEditor: window.TripEditor,
+      onEditTrip: id => editTrip(id),
+      onTripUpdated: async () => { await loadTrips(generation); return trips; }
+    });
     trips = []; resetForm(); renderTrips();
     settings = { ...defaults }; applyBrand();
     activeUserId = userId;
@@ -295,13 +320,25 @@
   }
 
   async function loadClient(id) {
-    const { data, error } = await db.rpc('get_public_trip', { lookup_public_id: id });
+    let result = await db.rpc('pt_feedback_public_trip', {p_public_id: id});
+    if (result.error && ['PGRST202', '42883'].includes(result.error.code)) {
+      result = await db.rpc('get_public_trip', {lookup_public_id: id});
+    }
+    const {data, error} = result;
     const trip = Array.isArray(data) ? data[0] : data;
     if (error || !trip) throw new Error('הקישור אינו זמין. פנו לסוכן הנסיעות לקבלת קישור תקין.');
     // This controls presentation only. RPC/RLS must also restrict draft access.
     if (trip.status === 'draft') throw new Error('המסלול עדיין בהכנה. הסוכן יעדכן אתכם כשהוא יהיה מוכן.');
     lang = trip.language === 'en' ? 'en' : 'he';
-    const draw = () => window.ClientView.render(trip, settings, lang);
+    clientFeedback?.destroy(); clientFeedbackService?.destroy();
+    clientFeedbackService = new window.FeedbackService(db, {trip, publicId: id});
+    await clientFeedbackService.loadClient();
+    clientFeedback = clientFeedbackService.available
+      ? new window.ClientFeedback({service: clientFeedbackService, trip, lang, root: $('clientPage')}) : null;
+    const draw = () => {
+      clientFeedback?.setLanguage(lang);
+      window.ClientView.render(trip, settings, lang, {feedback: clientFeedback});
+    };
     $('langBtn').addEventListener('click', () => { lang = lang === 'he' ? 'en' : 'he'; draw(); });
     draw();
   }
@@ -375,7 +412,8 @@
 
   async function start() {
     try {
-      if (!window.supabase || !model || !window.TripEditor || !window.ClientView) throw new Error('לא ניתן לטעון את רכיבי המערכת. בדקו את חיבור האינטרנט ורעננו.');
+      if (!window.supabase || !model || !window.TripEditor || !window.ClientView ||
+          !window.FeedbackService || !window.ClientFeedback || !window.AgentFeedback) throw new Error('לא ניתן לטעון את רכיבי המערכת. בדקו את חיבור האינטרנט ורעננו.');
       db = window.supabase.createClient('https://pcwosixpckdiodixmvhq.supabase.co', 'sb_publishable_fz6-acfY-axDH35LNKrwvA_3lC5iOKT');
       editor = new window.TripEditor($('itineraryEditor'));
       editor.reset(); loadDocuments([]); bindAdmin();

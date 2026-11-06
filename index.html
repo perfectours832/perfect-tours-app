@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="admin.css" />
     <link rel="stylesheet" href="client.css" />
     <link rel="stylesheet" href="editor.css" />
+    <link rel="stylesheet" href="feedback.css" />
+    <link rel="stylesheet" href="agent-feedback.css" />
     <title>Perfect Tours</title>
   </head>
   <body>
@@ -65,7 +67,8 @@
             ><button class="tab" data-tab="tripEditor" data-new-trip>
               יצירת חופשה</button
             ><button class="tab" data-tab="tripListCard">לקוחות וחופשות</button
-            ><button class="tab" data-tab="settingsCard">מיתוג והגדרות</button>
+            ><button class="tab" data-tab="feedbackCard">דיווחים ובקשות</button>
+            <button class="tab" data-tab="settingsCard">מיתוג והגדרות</button>
           </div>
           <section id="overview" class="tabpage">
             <div class="stats">
@@ -172,6 +175,10 @@
               placeholder="חיפוש לפי שם או יעד"
             />
             <div id="tripList">טוען...</div>
+          </section>
+          <section id="feedbackCard" class="card tabpage hidden">
+            <h2>דיווחים ובקשות</h2>
+            <div id="agentFeedback"></div>
           </section>
           <section id="settingsCard" class="card tabpage hidden">
             <div class="eyebrow">מיתוג והגדרות</div>
@@ -365,6 +372,7 @@
             >
           </div>
         </section>
+        <div id="tripFeedback"></div>
         <footer id="clientFooter">
           Perfect Tours ·
           <span data-he="חופשה שתוכננה בשבילכם" data-en="A trip made for you"
@@ -373,10 +381,13 @@
         </footer>
       </main>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
     <script src="itinerary-model.js"></script>
     <script src="client-view.js"></script>
     <script src="trip-editor.js"></script>
+    <script src="feedback-service.js"></script>
+    <script src="client-feedback.js"></script>
+    <script src="agent-feedback.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

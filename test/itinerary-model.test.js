@@ -52,6 +52,21 @@ test('structured edit preserves unknown metadata, pipes, and multiline descripti
   assert.deepEqual(input, original);
 });
 
+test('display fallback IDs become stable record IDs only when an edited itinerary is encoded', () => {
+  const original = [{day: 'יום 1', title: 'פעילות ישנה', description: 'ללא המרה בעת צפייה'}];
+  const decoded = model.decode(original);
+  assert.equal(decoded.days[0].id, 'day-index-0');
+  assert.equal(decoded.days[0].activities[0].activity_id, 'activity-index-0');
+  assert.deepEqual(decoded.original, original);
+  assert.deepEqual(original, [{day: 'יום 1', title: 'פעילות ישנה', description: 'ללא המרה בעת צפייה'}]);
+  const saved = model.encode(decoded.days);
+  assert.doesNotMatch(saved[0].day_id, /^day-index-/);
+  assert.doesNotMatch(saved[0].activity_id, /^activity-index-/);
+  const reloaded = model.encode(model.decode(saved).days);
+  assert.equal(reloaded[0].activity_id, saved[0].activity_id);
+  assert.equal(reloaded[0].day_id, saved[0].day_id);
+});
+
 test('known false representations never become purchased tickets', () => {
   for (const value of [false, 'false', 'no', 'לא', '0', 0, '', null, undefined]) {
     assert.equal(model.paid(value), false, String(value));

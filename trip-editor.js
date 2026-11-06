@@ -3,6 +3,17 @@
   'use strict';
 
   const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  const feedbackId = () => {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+    // Report identities are record keys, not credentials or public access tokens.
+    const bytes = new Uint8Array(16);
+    if (globalThis.crypto?.getRandomValues) globalThis.crypto.getRandomValues(bytes);
+    else bytes.forEach((_, index) => { bytes[index] = Math.floor(Math.random() * 256); });
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = [...bytes].map(value => value.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  };
   let instanceCount = 0;
 
   class TripEditor {
@@ -36,11 +47,39 @@
       this.importText = '';
       this.importPreview = null;
       this.openActivities = new Set();
+      const persistedRows = Array.isArray(value) ? value.filter(row => row && typeof row === 'object') : [];
+      const existingDayIds = new Set(persistedRows.map(row => row.day_id).filter(id => typeof id === 'string' && id.trim() && !/^day-index-\d+$/.test(id)));
+      const existingActivityIds = new Set(persistedRows.map(row => row.activity_id).filter(id => typeof id === 'string' && id.trim() && !/^activity-index-\d+$/.test(id)));
+      this.missingDayIds = new Set(this.days.filter(day => !existingDayIds.has(day.id)).map(day => day.id));
+      this.missingActivityIds = new Set(this.days.flatMap(day => day.activities).filter(activity => !existingActivityIds.has(activity.activity_id)).map(activity => activity.activity_id));
+      this.needsFeedbackIds = this.kind === 'structured' && persistedRows.some(row =>
+        typeof row.day_id !== 'string' || !row.day_id.trim() || /^day-index-\d+$/.test(row.day_id) ||
+        (row.kind !== 'day' && (typeof row.activity_id !== 'string' || !row.activity_id.trim() || /^activity-index-\d+$/.test(row.activity_id))));
+      this.feedbackIdsPrepared = false;
       this.render();
     }
 
     reset() { this.load([]); }
     isDirty() { return this.dirty; }
+
+    prepareFeedbackIds() {
+      if (this.kind !== 'structured' || !this.needsFeedbackIds) return;
+      this.days.forEach(day => {
+        if (this.missingDayIds.has(day.id)) day.id = feedbackId();
+        day.activities.forEach(activity => {
+          if (this.missingActivityIds.has(activity.activity_id)) {
+            const previousId = activity.activity_id;
+            activity.activity_id = feedbackId();
+            if (this.openActivities.delete(previousId)) this.openActivities.add(activity.activity_id);
+          }
+          activity.day_id = day.id;
+        });
+      });
+      this.needsFeedbackIds = false;
+      this.feedbackIdsPrepared = true;
+      this.dirty = true;
+      this.render();
+    }
 
     getValue() {
       // Editing customer metadata must never rewrite an itinerary, even a legacy value.
@@ -185,7 +224,8 @@
     }
 
     render(focusSelector) {
-      this.host.innerHTML = `<div class="editor-header"><div><h3>ימים ופעילויות</h3><p>בונים את המסלול כאן ושומרים יחד עם פרטי החופשה.</p></div>${this.kind === 'structured' ? this.button('add-day', '＋ הוספת יום', 'class="editor-primary"') : ''}</div>
+      this.host.innerHTML = `<div class="editor-header"><div><h3>ימים ופעילויות</h3><p>בונים את המסלול כאן ושומרים יחד עם פרטי החופשה.</p></div>${this.kind === 'structured' ? `<div class="editor-buttons">${this.needsFeedbackIds ? this.button('prepare-feedback-ids', 'הפעלת דיווחים למסלול') : ''}${this.button('add-day', '＋ הוספת יום', 'class="editor-primary"')}</div>` : ''}</div>
+        ${this.feedbackIdsPrepared ? '<p class="editor-notice" role="status">המזהים מוכנים. יש לשמור את החופשה כדי להפעיל דיווחים.</p>' : ''}
         ${this.kind === 'structured' ? `<p class="editor-hint">בתצוגת הלקוח הפעילויות ממוינות לפי השעה המומלצת. לשינוי זמן הפעילות יש לעדכן גם את השעה; סדר ידני קובע בין פעילויות באותה שעה.</p>${this.days.length ? this.days.map((day, di) => this.dayMarkup(day, di)).join('') : '<div class="editor-empty">הוסיפו יום ראשון כדי להתחיל לבנות את המסלול.</div>'}${this.converted ? `<div class="editor-notice">ההמרה הוחלה בעורך בלבד. יש לבדוק את כל הפרטים לפני שמירת החופשה.${this.button('restore-original', 'ביטול ההמרה וחזרה למקור')}</div>${this.originalMarkup()}` : ''}` : `<div class="editor-notice"><strong>המסלול נשמר בפורמט ישן או לא מוכר.</strong><p>ניתן לשמור שינויים בפרטי החופשה בלי לשנות אותו. כדי לערוך ימים ופעילויות יש לבצע המרה מבוקרת.</p></div>${this.originalMarkup()}${this.importMarkup()}`}`;
       if (focusSelector) this.host.querySelector(focusSelector)?.focus();
     }
@@ -248,6 +288,7 @@
       const ai = Number(button.dataset.activityIndex);
       const day = this.days[di];
       if (action === 'download-original') return this.downloadOriginal();
+      if (action === 'prepare-feedback-ids') return this.prepareFeedbackIds();
       if (action === 'preview-import') {
         this.importPreview = this.model.previewImport(this.importText);
         this.render();

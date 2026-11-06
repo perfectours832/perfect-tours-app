@@ -141,6 +141,10 @@
       const activities = M.orderedActivities(day.activities);
       content.innerHTML = `<div class="pt-day-heading"><h3>${esc(day.label || `${w.day} ${index + 1}`)}</h3><span>${esc(w.count(activities.length))}</span></div>${activities.length ? activities.map((activity, i) => renderActivity(activity, day, i, lang, options.phone)).join('') : `<p class="pt-empty">${esc(w.emptyDay)}</p>`}`;
       content.querySelectorAll('img').forEach(image => image.addEventListener('error', () => { image.hidden = true; }, {once: true}));
+      if (options.feedback) {
+        content.querySelectorAll('.pt-activity-body').forEach((host, i) => options.feedback.mountActivity(host, activities[i], day));
+        options.feedback.mountDay(content, day);
+      }
     };
     host.querySelectorAll('.pt-day-button').forEach(button => button.addEventListener('click', () => show(Number(button.dataset.dayIndex))));
     show(activeIndex);
@@ -160,7 +164,7 @@
     }).join('') : `<p class="pt-empty">${esc(w.noDocs)}</p>`;
   }
 
-  function render(trip, settings = {}, lang = 'he') {
+  function render(trip, settings = {}, lang = 'he', options = {}) {
     const w = words(lang);
     const page = document.getElementById('clientPage');
     if (!page) return;
@@ -201,8 +205,13 @@
     setLink('waQuick', whatsapp);
     setLink('contactWa', whatsapp);
     setLink('callBtn', callPhone ? `tel:${callPhone}` : '', true);
-    renderTimeline(document.getElementById('timeline'), trip.itinerary, lang, {phone});
+    renderTimeline(document.getElementById('timeline'), trip.itinerary, lang, {phone, feedback: options.feedback});
     renderDocuments(document.getElementById('docs'), trip.documents, lang);
+    const tripFeedback = document.getElementById('tripFeedback');
+    if (tripFeedback) {
+      tripFeedback.replaceChildren();
+      options.feedback?.mountTrip(tripFeedback);
+    }
 
     const hero = page.querySelector('.hero');
     if (hero) {
